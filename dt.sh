@@ -3,6 +3,8 @@
 # pending to finish, several things to do
 
 declare -r machine_code_file="${1?Executable code file necessary as first argument}"
+shift
+
 
 function set_dynamic_probes() {
 
@@ -24,6 +26,5 @@ function set_dynamic_probes() {
 
 # MAIN
 
-shift
 set_dynamic_probes  "$machine_code_file"  $@
 
