@@ -87,10 +87,29 @@ function trace_pids() {
     # ./source/tools/perf/util/target.c for which combination of perf
     # parameters are compatible with one another, and which are
     # mutually exclusive
-    local perf_other_options="--timestamp -g --call-graph dwarf"
+    local perf_record_other_options="--timestamp --call-graph dwarf"
 
-    perf record $events --pid=$pids $perf_other_options sleep "$seconds" &
-    echo "Do your normal operation on PIDs $pids in order to trace them."
+    # don't use the default "perf.data" file to save the perf-record to.
+    # (Cons: for the final dump of the trace collected you need to specify
+    #        this filename perf-record wrote to. The other option can be
+    #        to join the perf record and perf script directly, in live-mode.)
+    local perf_data="perf.data.$( date +%s ).$$"
+
+    perf record --output="$perf_data" $events $perf_record_other_options \
+                --pid=$pids sleep "$seconds" &
+
+    echo -e "\nCreating new trace file: '$perf_data'.\nDo your normal" \
+            "operations on PIDs $pids in order to trace them."
 
 }
 
+
+function dump_trace() {
+
+    local perf_data="${1?Trace file necessary as first argument}"
+
+    local perf_script_other_options="--ns"   # print nanoseconds
+    perf_script_other_options+=" --fields comm,tid,time,ip,sym,symoff,srcline"
+
+    perf script --input="$perf_data" $perf_script_other_options
+}
