@@ -3,6 +3,8 @@
 # set -o xtrace # set -x: uncomment to trace this bash script on standard-error
 
 function show_extern_function_names() {
+    # Show the extern function names (symbols) in the code file passed as the
+    # first argument to this function.
 
     local code_file="${1?Executable code file necessary as first argument}"
 
@@ -11,6 +13,9 @@ function show_extern_function_names() {
 
 
 function set_dynamic_probes() {
+    # Set a dynamic probe(s) on the code file passed as the
+    # first argument, and this probe(s) will have address as the next
+    # arguments to this function.
 
     local code_file="${1?Executable code file necessary as first argument}"
     shift
@@ -30,6 +35,12 @@ function set_dynamic_probes() {
 
 
 function list_event_probes() {
+    # If the first argument is 'N' or 'false' or 'no' or omitted, then this
+    # function lists the dynamic probes set on different code files, as well
+    # as their code in the first column in the output.
+    # If the first argument is otherwise, then list all probes available to
+    # the Linux Perf Counters sub-system, not only dynamic probes but also
+    # in the kernel and hardware-based.
 
     local list_all_events="${1:-N}"
 
@@ -46,6 +57,9 @@ function list_event_probes() {
 
 
 function del_dynamic_probes() {
+    # Delete a dynamic probe(s) given its code-symbol(s). (To obtain the
+    # code-symbol of a dynamic probe, see the first column in the output of
+    # the function 'list_event_probes()' above.
 
     if [[ $# -lt 1 ]]; then
         echo "ERROR: list of probe names is necessary as the first argument" \
@@ -65,6 +79,13 @@ function del_dynamic_probes() {
 
 
 function trace_pids() {
+    # Trace a PID(s) during some time on some given dynamic probe(s).
+    # The PID(s) is a comma-separated list of PID given as the first argument
+    # to this function; the time to probe (in seconds) is the second argument
+    # to this function; the dynamic probes on which to trace the PIDs are
+    # given as the third and successive arguments to this function.
+    # This function prints the new "perf.data" file it is using to write the
+    # trace (no live-mode -see below).
 
     local pids="${1?PIDs to trace needed as first argument [comma-separated]}"
     local seconds="${2?Number of seconds to trace needed as second argument.}"
@@ -105,6 +126,14 @@ function trace_pids() {
 
 
 function dump_trace() {
+    # Dump the trace file ("perf.data" file) printed-out by the function
+    # 'trace_pids()' above.
+    # This function lists the probes it hit during the trace, as well as the
+    # calling-stack-backtrace up to each occurrence of the probes requested,
+    # symbols address-offset, and source filename and line-number (if
+    # available in the code).
+    # The only argument to this function is the trace file
+    # ("perf.data" file) to list.
 
     local perf_data="${1?Trace file necessary as first argument}"
 
