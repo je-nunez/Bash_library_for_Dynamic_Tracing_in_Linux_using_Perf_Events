@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
+#
+# A Bash function library for dynamic tracing of user-land code in Linux, using
+# Linux's kernel Performance Counters sub-system ("perf").
 
 # set -o xtrace # set -x: uncomment to trace this bash script on standard-error
 
-function show_extern_function_names() {
+show_extern_function_names() {
     # Show the extern function names (symbols) in the code file passed as the
     # first argument to this function.
 
@@ -12,7 +15,7 @@ function show_extern_function_names() {
 }
 
 
-function set_dynamic_probes() {
+set_dynamic_probes() {
     # Set a dynamic probe(s) on the code file passed as the
     # first argument, and this probe(s) will have address as the next
     # arguments to this function.
@@ -20,8 +23,7 @@ function set_dynamic_probes() {
     local code_file="${1?Executable code file necessary as first argument}"
     shift
 
-    if [[ ! -f "$code_file" ]]
-    then
+    if [[ ! -f "$code_file" ]]; then
         echo "ERROR: '$code_file' does not seem to exist." >&2
         return 1
     fi
@@ -34,7 +36,7 @@ function set_dynamic_probes() {
 }
 
 
-function list_event_probes() {
+list_event_probes() {
     # If the first argument is 'N' or 'false' or 'no' or omitted, then this
     # function lists the dynamic probes set on different code files, as well
     # as their code in the first column in the output.
@@ -56,7 +58,7 @@ function list_event_probes() {
 }
 
 
-function del_dynamic_probes() {
+del_dynamic_probes() {
     # Delete a dynamic probe(s) given its code-symbol(s). (To obtain the
     # code-symbol of a dynamic probe, see the first column in the output of
     # the function 'list_event_probes()' above.
@@ -68,17 +70,17 @@ function del_dynamic_probes() {
         return 1
     fi
 
+    # concat all the probes requested to be deleted
     local probes_to_del=""
-    for p in $@
-    do
-        probes_to_del=$( printf "%s --del %s " "$probes_to_del" "$p" )
+    for p in $@; do
+        probes_to_del="$probes_to_del --del $p "
     done
 
     perf probe $probes_to_del
 }
 
 
-function trace_pids() {
+trace_pids() {
     # Trace a PID(s) during some time on some given dynamic probe(s).
     # The PID(s) is a comma-separated list of PID given as the first argument
     # to this function; the time to probe (in seconds) is the second argument
@@ -99,8 +101,7 @@ function trace_pids() {
     fi
 
     local events=""
-    for event in $@
-    do
+    for event in $@; do
         events="$events -e $event"
     done
 
@@ -125,7 +126,7 @@ function trace_pids() {
 }
 
 
-function dump_trace() {
+dump_trace() {
     # Dump the trace file ("perf.data" file) printed-out by the function
     # 'trace_pids()' above.
     # This function lists the probes it hit during the trace, as well as the
