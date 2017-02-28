@@ -15,6 +15,23 @@ show_extern_function_names() {
 }
 
 
+trace.available_extern_functions() {
+    # This name is intended more as a convenience alias (although it is
+    # implemented here as a function, so that it is more compatible with the
+    # plain Bourne shell. Unfortunately, some constructs in this library file
+    # use Bash-only features, like '[[' - FIXME to do it as plain Bourne sh.)
+    # Besides, both as an alias or as a simple wrapper function, plain Bourne
+    # shell and Bash suffer from dynamic lazy binding, ie., if the aliased-to
+    # name (right-hand-side) or the wrapped-name are later on redefined, then
+    # the alias or wrapper function is affected (except for fully qualified
+    # pathnames or scripts that clear the environment inherited from the
+    # parent.)
+    # Both these notes also apply to the wrapper-aliases below.
+
+    show_extern_function_names $@
+}
+
+
 set_dynamic_probes() {
     # Set a dynamic probe(s) on the code file passed as the
     # first argument, and this probe(s) will have address as the next
@@ -33,6 +50,11 @@ set_dynamic_probes() {
     do
         perf probe  -x "${code_file}"  --add "${trace_point}"
     done
+}
+
+
+trace.set_dynamic_probes() {
+    set_dynamic_probes $@
 }
 
 
@@ -58,6 +80,11 @@ list_event_probes() {
 }
 
 
+trace.list_probes() {
+    list_event_probes $@
+}
+
+
 del_dynamic_probes() {
     # Delete a dynamic probe(s) given its code-symbol(s). (To obtain the
     # code-symbol of a dynamic probe, see the first column in the output of
@@ -77,6 +104,11 @@ del_dynamic_probes() {
     done
 
     perf probe $probes_to_del
+}
+
+
+trace.del_dyn_probes() {
+    del_dynamic_probes $@
 }
 
 
@@ -126,6 +158,11 @@ trace_pids() {
 }
 
 
+trace.trace_pids() {
+    trace_pids $@
+}
+
+
 dump_trace() {
     # Dump the trace file ("perf.data" file) printed-out by the function
     # 'trace_pids()' above.
@@ -142,4 +179,9 @@ dump_trace() {
     perf_script_other_options+=" --fields comm,tid,time,ip,sym,symoff,srcline"
 
     perf script --input="$perf_data" $perf_script_other_options
+}
+
+
+trace.dump_trace() {
+    dump_trace $@
 }
