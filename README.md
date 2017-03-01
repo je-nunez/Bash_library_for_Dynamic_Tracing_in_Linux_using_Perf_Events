@@ -10,8 +10,8 @@ Source the function library in this repository into your Bash session:
 
       . dt.sh
        
-      # this environment variable name MY_CODE_FILE is not necessary, it is
-      # just for shortening the sample pathname
+      #    this environment variable name MY_CODE_FILE is not necessary, it is
+      #    just for shortening the sample pathname
       MY_CODE_FILE=/path/to/code/module-or-executable-fname
        
       #    see which external functions are available in the code file
