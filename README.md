@@ -16,6 +16,8 @@ Source the function library in this repository into your Bash session:
        
       #    see which external functions are available in the code file
       trace.available_extern_functions  "$MY_CODE_FILE"
+          ...  
+          ...  
        
       #    set one or more trace-points on that code file
       trace.set_dynamic_probes  "$MY_CODE_FILE"  trace_point1  [trace_point2 ...]
@@ -33,13 +35,14 @@ Source the function library in this repository into your Bash session:
       #               instruction below prints as its first and only
       #               output line.
       trace.trace_pids $PID  <duration-seconds>  trace_pointI  [trace_pointJ ...]
-       
+         perf.data....
+ 
       #    do the tests on your traced executable during <duration-seconds>
       ...
       ...
        
-      #    dump the trace filename perf.data...." that the instruction
-      #    above "trace.trace_pids..." reported in its first line.
+      #    dump the trace filename "perf.data...." that the instruction
+      #    above "trace.trace_pids ..." reported in its first line.
       trace.dump_trace   perf.data.1488256162.1265
 
 
