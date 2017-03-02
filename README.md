@@ -26,20 +26,31 @@ Source the function library in this repository into your Bash session:
       #    list all the dynamic trace-points that have been set
       trace.list_probes
        
-      #    start your program which uses the above code file and get its PID
-      #    -you may need to set it to the background with the job control
-      #    features in your shell- and trace it during <duration-seconds>
-      #    on the trace-points trace_pointI [trace_pointJ ...] you already
-      #    set up above with "trace.set_dynamic_probes ..."
+      #    Obtain the PID(s) of program(s) already running -probably using "ps"
+      #    or the /proc/ filesystem, etc- and that use the above code file. The
+      #    PID(s) you specify is a comma-separated list of running PIDs. The
+      #    command below starts tracing these PIDs during <duration-seconds> on
+      #    the trace-points trace_pointI [trace_pointJ ...] you already set up
+      #    above with "trace.set_dynamic_probes ...". (The PIDs may have been
+      #    already running even well before you set the trace points with
+      #    "trace.set_dynamic_probes ..." above, and this allows to
+      #    troubleshoot long-running background processes and system services
+      #    when an incident appears without needing to restart these system
+      #    services.)
       #    IMPORTANT: take note of the "perf.data...." filename that this
-      #               instruction below prints as its first and only
-      #               output line.
-      trace.trace_pids $PID  <duration-seconds>  trace_pointI  [trace_pointJ ...]
-         perf.data....
+      #               instruction below prints in its first output line.
+      trace.trace_pids $PIDs <duration-seconds> trace_pointI [trace_pointJ ...]
+         Creating new trace file: 'perf.data.<epoch-timestamp>.<random-numb>'.
+         Do your normal operations on PIDs ... in order to trace them.
  
-      #    do the tests on your traced executable during <duration-seconds>
+      #    [do the tests and] gather the samples on your traced executable
+      #    during the <duration-seconds> of your sampling.
       ...
       ...
+       
+      #    remove some tracepoints of the ones set up above in
+      #    "trace.set_dynamic_probes ..."
+      trace.del_dyn_probes  trace_pointX  [trace_pointY ...]
        
       #    dump the trace filename "perf.data...." that the instruction
       #    above "trace.trace_pids ..." reported in its first line.
