@@ -26,7 +26,7 @@ See which external functions are available in the code file, which then can be u
           ...
           ... <prints the ids of the new trace-points on $MY_CODE_FILE>
 
-To list all the dynamic trace-points that have been set, and their identifiers, use:
+<a name="list_probes"></a> To list all the dynamic trace-points that have been set, and their identifiers, use:
 
       trace.list_probes
           ...
@@ -50,6 +50,7 @@ To remove some tracepoints among the ones set up above in [`trace.set_dynamic_pr
 
       trace.del_dyn_probes  trace_pointX  [trace_pointY ...]
 
+(In a long session, you may obtain the ids of the trace-points currently set calling [`trace.list_probes`](#list_probes).)
 
 Pending to TODO more details.
 
