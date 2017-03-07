@@ -32,6 +32,59 @@ trace.available_extern_functions() {
 }
 
 
+show_available_local_vars() {
+    # Show accessible local variables in a region in the code file passed as
+    # the first argument to this function: the region is passed as the second
+    # argument to this function
+
+    local code_file="${1?Executable code file necessary as first argument}"
+    local region="${2?Region where to find local vars needed as 2nd argument}"
+
+    perf probe -x  "${code_file}"  --vars "${region}"
+}
+
+
+trace.available_local_vars() {
+    show_available_local_vars $@
+}
+
+
+show_available_global_and_local_vars() {
+    # Show accessible global and local variables in a region in the code file
+    # passed as the first argument to this function: the region is passed as
+    # the second argument to this function
+
+    local code_file="${1?Executable code file necessary as first argument}"
+    local region="${2?Region where to find variables needed as 2nd argument}"
+
+    perf probe -x  "${code_file}"  --vars "${region}" --externs
+}
+
+
+trace.available_global_local_vars() {
+    show_available_global_and_local_vars $@
+}
+
+
+show_available_src_lines() {
+    # Show source-code lines that can be probed in a region in the code file
+    # passed as the first argument to this function: the region is passed as
+    # the second argument to this function.
+    # Note: this may require access to the source-code of the code file in
+    #       the local Linux instance where this function is run.
+
+    local code_file="${1?Executable code file necessary as first argument}"
+    local region="${2?Region where to find src-lines needed as 2nd argument}"
+
+    perf probe -x  "${code_file}"  --line "${region}"
+}
+
+
+trace.available_src_lines() {
+    show_available_src_lines $@
+}
+
+
 set_dynamic_probes() {
     # Set a dynamic probe(s) on the code file passed as the
     # first argument, and this probe(s) will have address as the next
