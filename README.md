@@ -1,6 +1,6 @@
-# dt
+# A Bash library for Dynamic-Tracing in Linux using Perf Events
 
-A very simple Bash wrapper library for a dynamic-tracer of user-processes in Linux using the [`Perf Counters` subsystem](https://perf.wiki.kernel.org/index.php/Main_Page), giving also the calling-stack (backtrace) for each case of the traced-points hit during the tracing.
+A very simple Bash wrapper library for a dynamic-tracer of user-processes in Linux (kernel 3.5+) using the [`Perf Counters` subsystem](https://perf.wiki.kernel.org/index.php/Main_Page), giving also the calling-stack (backtrace) for each case of the traced-points hit during the tracing.
 
 # WIP
 
@@ -43,6 +43,24 @@ The `perf` tools and utilities (generally installed from a package through your 
           trace.available_extern_functions  "$MY_CODE_FILE"
               ...
               ... <prints the external function names available in $MY_CODE_FILE>
+
+* See which local variables are available at a location in the code file (and their C types), which can then be requested to be printed in the hits at the trace-points -for example, the local variables available at the entry point of a function-call are only the arguments passed to that function -its stack has not yet been allocated for its internal local variables:
+
+          trace.available_local_vars  "$MY_CODE_FILE"  <a_location>
+              ...
+              ... <prints the local variables available in $MY_CODE_FILE at <a_location> >
+
+* See which global and local variables are available at a location in the code file (and their C types), which can then be requested to be printed in the hits at the trace-points:
+
+          trace.available_global_local_vars  "$MY_CODE_FILE"  <a_location>
+              ...
+              ... <prints the global and local variables available in $MY_CODE_FILE at <a_location> >
+
+* See which source code lines are available to be traced at a location in the code file, which can then be used as reference in trace-points. For example, if <a_location> is a function name, then it prints the body of this function highlighting its source-lines which can be traceable (note: **this functionality below requires the availability of the source code in the local machine from which the code file was compiled, because this functionality given by Perf shows the source code lines as they are, which of course, are not in the compiled code itself** -e.g., only if you require this functionality to see the actual source code lines, then in RedHat/CentOS distros do a `yumdownloader --source ...` and `rpm2cpio ...`, and in Debian/Ubuntu distros, do a `apt-get source ...` before running this function):
+
+          trace.available_src_lines  "$MY_CODE_FILE"  <a_location>
+              ...
+              ... <prints the source lines available for a tracing in $MY_CODE_FILE at <a_location> >
 
 * <a name="set_trace_points"></a> Set one or more trace-points on that code file (this call may be repeated multiple times on the same code file, or on another). Note please the names, or `ids`, that are returned in the standard-output for each new trace-point:
 
