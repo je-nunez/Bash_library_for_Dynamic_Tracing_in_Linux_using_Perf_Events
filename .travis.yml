@@ -1,2 +1,7 @@
 language: bash
 
+# Download the shunit2 unit-testing for the Unix/Linux shells
+# (see: http://ssb.stsci.edu/testing/shunit2/shunit2.html)
+before_script:
+    - curl -L 'https://github.com/kward/shunit2/archive/source.tar.gz' | tar xz
+
