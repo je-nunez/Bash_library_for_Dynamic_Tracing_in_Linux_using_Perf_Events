@@ -1,6 +1,10 @@
 # A Bash library for Dynamic-Tracing in Linux using Perf Events
 
+[![Build Status](https://travis-ci.org/je-nunez/Bash_library_for_Dynamic_Tracing_in_Linux_using_Perf_Events.svg?branch=master)](https://travis-ci.org/je-nunez/Bash_library_for_Dynamic_Tracing_in_Linux_using_Perf_Events)
+
 A very simple Bash wrapper library for a dynamic-tracer of user-processes in Linux (kernel 3.5+) using the [`Perf Counters` subsystem](https://perf.wiki.kernel.org/index.php/Main_Page), giving also the calling-stack (backtrace) for each case of the traced-points hit during the tracing.
+
+Sometimes it is useful to trace a program at run-time, and at the same time, obtain the stack backtraces on the list of direct and indirect callers which made the execution reached till the tracepoint(s). It is similar to the `trace` and `backtrace` (`bt`) commands in `GDB`, in the sense that it does not stop the program like breakpoints would do, but it collects calling stacks. The Linux kernel `Perf Counters` subsystem using User-space Probing (`uprobe`) is an option that makes this possible, without using `GDB`.
 
 # WIP
 
