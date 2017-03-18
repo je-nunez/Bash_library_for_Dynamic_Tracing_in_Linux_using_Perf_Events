@@ -1,4 +1,9 @@
 
+/*
+ * A simple test program in C on which to set
+ * the dynamic probes.
+ */
+
 #include <stdio.h>
 
 extern void
