@@ -1,7 +1,26 @@
 language: bash
+sudo: required
+os:
+  - linux
 
-# Download the shunit2 unit-testing for the Unix/Linux shells
-# (see: http://ssb.stsci.edu/testing/shunit2/shunit2.html)
-before_script:
-    - curl -L 'https://github.com/kward/shunit2/archive/source.tar.gz' | tar xz
+# a newer distribution, with Linux kernels >= version 3.5, is necessary
+# for these tests, so it is used here 14.04 (Trusty) which comes
+# pre-installed with Linux kernel 3.13
+dist: trusty
+
+before_install:
+  - sudo apt-get update -qq
+  # required packages for Linux Perf (Travis CI build servers use Ubuntu)
+  - sudo apt-get install -y -qq linux-tools-common linux-tools-generic
+  - sudo apt-get install -y -qq linux-tools-`uname -r`
+  # required packages for building (GCC, etc)
+  - sudo apt-get install -y -qq build-essential
+  # Download the shunit2 unit-testing for the Unix/Linux shells
+  # (see: http://ssb.stsci.edu/testing/shunit2/shunit2.html)
+  - curl -L 'https://github.com/kward/shunit2/archive/source.tar.gz' | tar xz -C /tmp/
+  # Compile the test program on which to set the probes
+  - gcc -g unit_tests/simple.c -o /tmp/simple
+
+script:
+  - sudo bash unit_tests/unit_test.sh
 
