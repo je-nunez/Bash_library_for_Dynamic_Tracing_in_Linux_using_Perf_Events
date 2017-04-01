@@ -28,7 +28,7 @@ trace.available_extern_functions() {
     # parent.)
     # Both these notes also apply to the wrapper-aliases below.
 
-    show_extern_function_names $@
+    show_extern_function_names "$@"
 }
 
 
@@ -45,7 +45,7 @@ show_available_local_vars() {
 
 
 trace.available_local_vars() {
-    show_available_local_vars $@
+    show_available_local_vars "$@"
 }
 
 
@@ -62,7 +62,7 @@ show_available_global_and_local_vars() {
 
 
 trace.available_global_local_vars() {
-    show_available_global_and_local_vars $@
+    show_available_global_and_local_vars "$@"
 }
 
 
@@ -81,7 +81,7 @@ show_available_src_lines() {
 
 
 trace.available_src_lines() {
-    show_available_src_lines $@
+    show_available_src_lines "$@"
 }
 
 
@@ -98,8 +98,13 @@ set_dynamic_probes() {
         return 1
     fi
 
+    if [[ $# -lt 1 ]]; then
+        echo "ERROR: trace-probe points needed as 2nd and next args." >&2
+        return 2
+    fi
+
     # set dynamic trace points
-    for trace_point in $@
+    for trace_point in "$@"
     do
         perf probe  -x "${code_file}"  --add "${trace_point}"
     done
@@ -107,7 +112,7 @@ set_dynamic_probes() {
 
 
 trace.set_dynamic_probes() {
-    set_dynamic_probes $@
+    set_dynamic_probes "$@"
 }
 
 
@@ -134,7 +139,7 @@ list_event_probes() {
 
 
 trace.list_probes() {
-    list_event_probes $@
+    list_event_probes "$@"
 }
 
 
@@ -152,8 +157,8 @@ del_dynamic_probes() {
 
     # concat all the probes requested to be deleted
     local probes_to_del=""
-    for p in $@; do
-        probes_to_del="$probes_to_del --del $p "
+    for p in "$@"; do
+        probes_to_del+="--del $p "
     done
 
     perf probe $probes_to_del
@@ -161,7 +166,7 @@ del_dynamic_probes() {
 
 
 trace.del_dyn_probes() {
-    del_dynamic_probes $@
+    del_dynamic_probes "$@"
 }
 
 
@@ -186,8 +191,8 @@ trace_pids() {
     fi
 
     local events=""
-    for event in $@; do
-        events="$events -e $event"
+    for event in "$@"; do
+        events+=" -e $event"
     done
 
     # see the function perf_target__validate() in Linux's
@@ -212,7 +217,7 @@ trace_pids() {
 
 
 trace.trace_pids() {
-    trace_pids $@
+    trace_pids "$@"
 }
 
 
@@ -229,12 +234,13 @@ dump_trace() {
     local perf_data="${1?Trace file necessary as first argument}"
 
     local perf_script_other_options="--ns"   # print nanoseconds
-    perf_script_other_options+=" --fields comm,tid,time,ip,sym,symoff,srcline"
+    perf_script_other_options+=" --fields trace:comm,tid,time,ip,sym,symoff,"
+    perf_script_other_options+="srcline,trace"  # continuation of fields
 
     perf script --input="$perf_data" $perf_script_other_options
 }
 
 
 trace.dump_trace() {
-    dump_trace $@
+    dump_trace "$@"
 }
