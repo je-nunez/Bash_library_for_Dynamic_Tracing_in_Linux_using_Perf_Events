@@ -48,7 +48,14 @@ testShowAvailableSrcLines() {
 
 testSetDynamicProbe() {
 
-  trace.set_dynamic_probes "$my_prg_to_trace" "$my_function_to_trace"
+  # catching with Perf Events a parameter argument into the function
+  # $my_function_to_trace:
+  # The compiler optimizes the parameter passing so that the first function
+  # argument is passed through a CPU register: in the case of Linux on the
+  # x86-64 is the System V AMD64 ABI: see page 24 of:
+  # https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf
+  trace.set_dynamic_probes "$my_prg_to_trace" \
+                           "$my_function_to_trace $my_param_to_trace=%di"
 
   trace.list_probes | grep -qs "$my_probe_name"
 
@@ -62,8 +69,9 @@ testSetDynamicProbe() {
 
 testDelDynamicProbe() {
 
-  # create the probe
-  trace.set_dynamic_probes "$my_prg_to_trace" "$my_function_to_trace"
+  # create the probe: see notes inside testSetDynamicProbe above
+  trace.set_dynamic_probes "$my_prg_to_trace" \
+                           "$my_function_to_trace $my_param_to_trace=%di"
 
   # del the probe
   trace.del_dyn_probes "$my_probe_name"
@@ -76,5 +84,33 @@ testDelDynamicProbe() {
   assertEquals "Did not expect the probe '$my_probe_name'" "$exit_code" 1
 }
 
-. /tmp/shunit2-source/2.1.6/src/shunit2
+testTracePID() {
 
+  local duration_of_trace=30
+  local test_process_pid
+
+  # create the probe: see notes inside testSetDynamicProbe above
+  trace.set_dynamic_probes "$my_prg_to_trace" \
+                           "$my_function_to_trace $my_param_to_trace=%di"
+
+  # Fork the test process stopped in the background
+  ( kill -SIGSTOP $BASHPID; exec "${my_prg_to_trace?}" ) &
+  # Get the PID of the test process stopped in the background
+  test_process_pid=$!
+
+  # Trace the test process PID for "$duration_of_trace" seconds
+  ( trace.trace_pids "${test_process_pid?}" \
+             "$duration_of_trace" "$my_probe_name" ) &
+
+  # Send the CONT signal to the test process
+  sleep 1    # this seems to be required for the automated Unit-Test
+  kill -CONT "$test_process_pid"
+  # ps -p "$test_process_pid" -f
+
+  sleep $(( duration_of_trace + 1 ))
+
+  # del the probe
+  trace.del_dyn_probes "$my_probe_name"
+}
+
+. /tmp/shunit2-source/2.1.6/src/shunit2
