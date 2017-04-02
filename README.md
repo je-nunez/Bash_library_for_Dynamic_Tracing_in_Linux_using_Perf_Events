@@ -21,8 +21,11 @@ Brendan Gregg's webpage [http://www.brendangregg.com](http://www.brendangregg.co
 For user-land tracing in Linux, you need a kernel version 3.5 or later, and the following config parameters in the running kernel:
 
        CONFIG_UPROBE_EVENT=y
-       CONFIG_HAVE_PERF_EVENTS=y
+       CONFIG_UPROBES=y
        CONFIG_PERF_EVENTS=y
+       CONFIG_TRACEPOINTS=y
+
+(Note: Other kernel `CONFIG_` parameters may also be needed in order to trace inside the Linux kernel with Perf Events, which is not directly dealt with in this Bash library, whose purpose is more for user-land application tracing.)
 
 You may need to confirm that the virtual debug filesystem is mounted, and mount it if necessary:
 
@@ -72,6 +75,36 @@ The `perf` tools and utilities (generally installed from a package through your 
               ...
               ... <prints the ids of the new trace-points on $MY_CODE_FILE>
 
+The trace-points requested to `trace.set_dynamic_probes` follow the syntax for them in [perf-probe](http://man7.org/linux/man-pages/man1/perf-probe.1.html#PROBE_SYNTAX).
+
+<a name="collecting_data_at_trace_points"></a> In particular, note that a trace-point doesn't necessarily be at a function entry-point, but can be relative to it or at its return instruction (using the suffix `%return`). Also note that trace-points can also specify data variables (arguments) and their dereferences (including array subscripting and field members in a C structure), to collect at that trace-point, using the syntax at [http://man7.org/linux/man-pages/man1/perf-probe.1.html#PROBE_ARGUMENT](http://man7.org/linux/man-pages/man1/perf-probe.1.html#PROBE_ARGUMENT):
+
+           [NAME=]LOCALVAR|$retval|%REG|@SYMBOL[:TYPE]
+
+This ability to collect arbitrary data values at the moment a trace-point executed is somehow similar to `GDB`'s trace-points actions for collecting data -explained at [https://sourceware.org/gdb/onlinedocs/gdb/Tracepoint-Actions.html](https://sourceware.org/gdb/onlinedocs/gdb/Tracepoint-Actions.html).
+
+Please note that the compiler may have optimized data into CPU registers in the executable code it emitted. If this was the case, then at execution-time you may need to collect the `%REG` to recall that data and not the original symbolic name of the variable in the input source code to the compiler. For example, to collect the values of the parameter to a function-call, if the executable code was emitted for the x86-64 architecture, then the calling convention is the System V AMD64 ABI, and then the compiler may have optimized such parameter-passing into a function-call using CPU registers, and not by actually pushing them onto the stack. So, if x86-64 is the architecture, then you may request the value of the parameters in your trace using:
+
+          # let's name, in our tracing, the parameters to
+          # my_traced_function(...) as:
+          #     my_first_param
+          #     my_second_param
+          # etc. Then, in order to collect these parameters at the entry-point
+          # of my_traced_function(...), if the code was compiled for the
+          # x86-64 architecture and optimized by the compiler, we may need to
+          # collect the CPU registers the compiler actually used to pass
+          # these parameters to the function call:
+           
+          MY_TRACE_POINT='my_traced_function my_first_param=%di my_second_param=%si ...'
+           
+          trace.set_dynamic_probes  "$MY_CODE_FILE"  "$MY_TRACE_POINT"
+
+Note in the example above that the trace-point and the argument data to collect at it, are specified as one single string argument (i.e., the trace-point and its arguments data to collect are all inside the single string variable `"$MY_TRACE_POINT"` -this Bash variable `"$MY_TRACE_POINT"` is for making this bundling clearer, the library does not use this variable). Furthermore, as an extra note, to save the parameters to a function call in the trace, if they were optimized into CPU registers by the compiler, you may need to collect them at a trace-point precisely at the entry-point of the function (as in this example above), not in a relative point later in the function body, since the compiler may have re-used those CPU registers to hold other data further down inside the function body.
+
+To see all the CPU registers that a compiler may use when optimizing the parameters into a function call in the System V AMD64 ABI of the x86-64 architecture, see page 23 of [https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf).
+
+For a practical example of collecting arguments at trace-points using Perf-Events -which this Bash library uses-, that may explain more easily the collection of data samples at trace-points (function-calls), see *Linux Perf Probes for Oracle Tracing* at [https://db-blog.web.cern.ch/blog/luca-canali/2016-01-linux-perf-probes-oracle-tracing](https://db-blog.web.cern.ch/blog/luca-canali/2016-01-linux-perf-probes-oracle-tracing).
+
 * <a name="list_probes"></a> To list all the dynamic trace-points that have been set, and their identifiers, use:
 
           trace.list_probes
@@ -91,6 +124,8 @@ The PIDs may have been already running even well before you set the trace points
 * To dump the trace filename `perf.data....` that the instruction above [`trace.trace_pids ...`](#trace_pids) reported in its first line (including timestamps and dumping as well the calling stacks for those execution hits on the traced symbols, and source code filename and line number if available), you may use:
 
           trace.dump_trace   perf.data.<printed-by-trace.trace_pids-above>
+
+If there are some probes recorded inside that trace file `perf.data....` which requested collection of data arguments at the probe -see [collecting data arguments at a trace point](#collecting_data_at_trace_points) above-, then `trace.dump_trace perf.data....` will print these data arguments collected when the execution passed through that probe point. (This is somehow similar to `GDB`'s `tdump` instruction to dump data collected at a trace-point, [https://sourceware.org/gdb/onlinedocs/gdb/tdump.html](https://sourceware.org/gdb/onlinedocs/gdb/tdump.html). I.e., `trace.dump_trace ...` will print automatically the data collected at a trace-point if the probe defined at `trace.set_dynamic_probes ...` had requested to collect such data at the trace-point -see [collecting data arguments at a trace point](#collecting_data_at_trace_points) above.)
 
 * To remove some tracepoints among the ones set up above in [`trace.set_dynamic_probes ...`](#set_trace_points), specify their ids in:
 
