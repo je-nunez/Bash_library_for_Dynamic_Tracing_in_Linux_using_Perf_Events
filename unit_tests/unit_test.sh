@@ -5,7 +5,7 @@
 # like a Linux kernel whose version be 3.5 or greater, the "shunit2"
 # Shell Unit-Testing library under /tmp/, etc.
 
-my_prg_to_trace='unit_tests/simple'
+my_prg_to_trace='/tmp/simple'
 my_function_to_trace='my_func'
 my_param_to_trace='my_param'
 my_param_value='0x4'
