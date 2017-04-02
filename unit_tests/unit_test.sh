@@ -5,9 +5,10 @@
 # like a Linux kernel whose version be 3.5 or greater, the "shunit2"
 # Shell Unit-Testing library under /tmp/, etc.
 
-my_prg_to_trace='/tmp/simple'
+my_prg_to_trace='unit_tests/simple'
 my_function_to_trace='my_func'
 my_param_to_trace='my_param'
+my_param_value='0x4'
 
 my_probe_name=$( printf "probe_%s:%s" $( basename "$my_prg_to_trace" ) \
                                       "$my_function_to_trace" )
@@ -88,6 +89,7 @@ testTracePID() {
 
   local duration_of_trace=30
   local test_process_pid
+  local perf_record_fname
 
   # create the probe: see notes inside testSetDynamicProbe above
   trace.set_dynamic_probes "$my_prg_to_trace" \
@@ -109,8 +111,26 @@ testTracePID() {
 
   sleep $(( duration_of_trace + 1 ))
 
-  # del the probe
+  # delete the perf-record dynamic uprobe
   trace.del_dyn_probes "$my_probe_name"
+
+  # get filename that trace.trace_pids created
+  perf_record_fname=$( find . -maxdepth 1 -name perf.data.\* -mmin -4 | \
+                          xargs ls -tr | tail -n 1 )
+
+  # dump that file and see a call to "$my_function_to_trace" with
+  # argument "$my_param_to_trace=$my_param_value"
+  trace.dump_trace "${perf_record_fname?}" | \
+     grep -A 1 "$my_param_to_trace=$my_param_value" | \
+     grep -qs "$my_function_to_trace"
+
+  exit_code=$?
+
+  # delete the perf-record trace file
+  rm -f "${perf_record_fname?}"
+
+  # expected to see a call to:
+  assertEquals "Expected a call to '$my_function_to_trace" "$exit_code" 0
 }
 
 . /tmp/shunit2-source/2.1.6/src/shunit2
